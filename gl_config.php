@@ -7,13 +7,5 @@
         header("Location: $redirect");
     }
 
-    function set_title($title)
-    {
-        echo
-"<head>
-    <title>LS – $title</title>
-</head>";
-    }
-
     error_reporting(E_ALL);
 ?>
