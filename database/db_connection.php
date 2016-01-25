@@ -1,5 +1,5 @@
 <?php
-    require_once "../config/gl_config.php";
+    require_once "config/gl_config.php";
     require_once "db_config.php";
 
     try
