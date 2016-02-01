@@ -1,6 +1,6 @@
 <?php
-    require_once "config/gl_config.php";
-    require_once "db_config.php";
+    require_once __DIR__."/../config.php";
+    require_once __DIR__."/db_config.php";
 
     try
     {
@@ -11,5 +11,3 @@
         echo "<p>DB access malfunction: " . $e->getMessage() . "</p>";
         die();
     }
-
-?>

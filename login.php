@@ -1,35 +1,23 @@
 <?php
-    require_once "config/gl_config.php";
-    require_once "database/db_connection.php";
+    require_once __DIR__."/config.php";
+    require_once __DIR__."/database/db_connection.php";
+    require_once __DIR__."/postlogin.php";
 
-    if(isset($_COOKIE['ls-username']) && isset($_COOKIE['ls-logged_in']))
+    if(USER_LOGGED_IN)
     {
-        $username = $_COOKIE['ls-username'];
-        $stamp = $_COOKIE['ls-logged_in'];
-        $db_query = $db->prepare("SELECT `login_stamp` FROM `users` WHERE `username` = :username");
-        $db_query->bindParam(":username", $username);
-        $db_query->execute();
-        $result = $db_query->fetchColumn();
-        if($result != $stamp)
-        {
-            setcookie("ls-username", "", time()-60*60*24);
-            setcookie("ls-logged_in", "", time()-60*60*24);
-            header("Location: login.php");
-        }
-        echo "Log in complete";
-        die();
+        header("Location: index.php");
     }
-
-    if(empty($_POST))	//Escape if no data sent
+    elseif(empty($_POST))	//Escape if no data sent
     {
         header("Location: login.html");
     }
 
-////Get data from POST query
-    $data['username'] = trim($_POST['username']);
+//Get data from POST query
+    $data['username'] = strtoupper(trim($_POST['username']));
+    $data['shown_username'] = trim($_POST['username']);
     $data['pass_hash'] = md5($_POST['password']);
 
-////Check if user exists
+//Check if user exists
     $db_query = $db->prepare("SELECT `username` FROM `users` WHERE `username` = :username");
     $db_query->bindParam(":username", $data['username']);
     $db_query->execute();
@@ -41,7 +29,7 @@
         die("User does not exist");
     }
 
-////Check if password matches
+//Check if password matches
     $db_query = $db->prepare("SELECT `password_hash` FROM `users` WHERE `username` = :username");
     $db_query->bindParam(":username", $data['username']);
     $db_query->execute();
@@ -53,8 +41,8 @@
         die("Wrong password");
     }
 
-////Login
-    $logged_in = date('YmdHis');
+//Login
+    $logged_in = time();
     //echo "$logged_in<br>";
     $stamp = md5($data['username'] . rand(0,1024)+time()%1024);
     //echo "$stamp<br>";
@@ -64,6 +52,6 @@
     $db_query->bindParam(":stamp", $stamp);
     $db_query->execute();
     setcookie("ls-username", $data['username'], time()+60*60*24);
-    setcookie("ls-logged_in", $stamp, time()+60*60*24);
+    setcookie("ls-shown_username", $data['shown_username'], time()+60*60*24);
+    setcookie("ls-login_stamp", $stamp, time()+60*60*24);
     header("Location: postlogin.php");
-?>

@@ -1,6 +1,12 @@
 <?php
-	require_once "config/gl_config.php";
-	require_once "database/db_connection.php";
+	require_once __DIR__."/config.php";
+	require_once __DIR__."/database/db_connection.php";
+	require_once __DIR__."/postlogin.php";
+
+	if(USER_LOGGED_IN)
+	{
+		header("Location: index.php");
+	}
 
 	if(empty($_POST))	//Escape if no data sent
 	{
@@ -11,11 +17,12 @@
     header("Expires: Sat, 01 Jan 1980 05:00:00 GMT");
 
 //Get data from POST query
-	$data['username'] = trim($_POST['username']);
+	$data['username'] = strtoupper(trim($_POST['username']));
+	$data['shown_username'] = trim($_POST['username']);
 	$data['password'] = $_POST['password'];
 	$data['pass_hash'] = md5($_POST['password']);	//I do not work with passwords "as is"
 	$data['name'] = trim($_POST['name']);
-	$data['email'] = trim($_POST['email']);
+	$data['email'] = strtolower(trim($_POST['email']));
 
 //Trying to get image from form
 	$upload_dir = "/files/profile_pictures/";
@@ -99,11 +106,9 @@
 	}
 
 //Register user
-	$db_query = $db->prepare("INSERT INTO `users` (`id`, `username`, `password`, `password_hash`, `name`, `email`) VALUES (NULL, :username, :password, :pass_hash, :name, :email);");
+	$db_query = $db->prepare("INSERT INTO `users` (`user_id`, `username`, `shown_username`, `password_hash`, `password`, `name`, `email`, `logged_in`, `login_stamp`, `invited_by`) VALUES (NULL, :username, :shown_username, :pass_hash, :password, :name, :email, NULL, NULL, NULL);");
 	$db_query->execute((array)$data);
 	$now = date('YmdHis');
 	$userpic_location = "/userpics/";
 	@move_uploaded_file($_FILES[$image_fieldname]['tmp_name'], "$userpic_location{$data['username']}_$now");
-	echo "Success<br>";
-	echo "<a href='.'>Back to homepage</a>"
-?>
+	header("Location: login.php");
