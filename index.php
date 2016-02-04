@@ -3,4 +3,5 @@
     require_once __DIR__."/twig_config.php";
 
     $title = "Main";
-    echo $twig->render("base.html", array('title' => $title));
+    //echo $twig->render("base.html", array('title' => $title));
+    echo $_SERVER['DOCUMENT_ROOT'];

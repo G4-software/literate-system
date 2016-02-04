@@ -1,0 +1,8 @@
+<div class='menu'>
+    <ul>
+        <li class='item'><a href="index.php">Main page</a></li>
+        {% for item in menu %}
+            <li class='item'><a href='{{item.link}}'>{{item.text}}</a></li>
+        {% endfor %}
+    </ul>
+</div>

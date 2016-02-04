@@ -7,4 +7,7 @@
         header("Location: $redirect");
     }
 
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 01 Jan 1980 05:00:00 GMT");
+
     error_reporting(E_ALL);

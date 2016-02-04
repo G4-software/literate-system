@@ -7,24 +7,28 @@
         $username = $_COOKIE['ls-username'];
         $shown_username = $_COOKIE['ls-shown_username'];
         $login_stamp = $_COOKIE['ls-login_stamp'];
-        $db_query = $db->prepare("SELECT `login_stamp` FROM `users` WHERE `username` = :username");
+        $db_query = $db->prepare("SELECT `user_id`, `login_stamp` FROM `users` WHERE `username` = :username");
         $db_query->bindParam(":username", $username);
         $db_query->execute();
-        $result = $db_query->fetchColumn();
-        if($result != $login_stamp)
+        $result = $db_query->fetch(PDO::FETCH_ASSOC);
+        if($result['login_stamp'] != $login_stamp)
         {
             setcookie("ls-username", "", time()-60*60*24);
             setcookie("ls-login_stamp", "", time()-60*60*24);
-            echo "cookies deleted";
-            //header("Location: login.php");
+            define("USER_LOGGED_IN", FALSE);
         }
-        define("USER_LOGGED_IN", TRUE);
-        define("USERNAME", $username);
-        define("SHOWN_USERNAME", $shown_username);
-        echo "user logged in<br />".USER_LOGGED_IN;
+        else{
+            define("USER_LOGGED_IN", TRUE);
+            define("USER_ID", $result['user_id']);
+            define("USERNAME", $username);
+            define("SHOWN_USERNAME", $shown_username);
+            if(isset($_GET['location']))
+            {
+                header("Location: ".urldecode($_GET['location']));
+            }
+        }
     }
     else
     {
         define("USER_LOGGED_IN", FALSE);
-        echo "user not logged in";
     }

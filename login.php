@@ -2,6 +2,20 @@
     require_once __DIR__."/config.php";
     require_once __DIR__."/database/db_connection.php";
     require_once __DIR__."/postlogin.php";
+    require_once __DIR__."/twig_config.php";
+
+    $page = array(  'title' => "Login",
+                    'page_title' => "Login",
+                    'blocks' => array(  'login' => array(   'type' => 'form',
+                                                            'script' => "login.php",
+                                        					'method' => "POST",
+                                        					'inputs' => array(	'username' => array(	'label' => "Username:",
+                                        																'type' => "text",
+                                        																'name' => "username"),
+                                        										'password' => array(	'label' => "Password:",
+                                        																'type' => "password",
+                                        																'name' => "password"),),
+                                                            'submit_button_text' => "Login")));
 
     if(USER_LOGGED_IN)
     {
@@ -9,7 +23,8 @@
     }
     elseif(empty($_POST))	//Escape if no data sent
     {
-        header("Location: login.html");
+        echo $twig->render("template.html", $page);
+        die();
     }
 
 //Get data from POST query
@@ -25,7 +40,7 @@
     //echo "$result<br>";
     if($result != $data['username'])
     {
-        readfile("login.html");
+        echo $twig->render("template.html", $page);
         die("User does not exist");
     }
 
@@ -37,7 +52,7 @@
     //echo "$result<br>";
     if($result != $data['pass_hash'])
     {
-        readfile("login.html");
+        echo $twig->render("template.html", $page);
         die("Wrong password");
     }
 
@@ -54,4 +69,4 @@
     setcookie("ls-username", $data['username'], time()+60*60*24);
     setcookie("ls-shown_username", $data['shown_username'], time()+60*60*24);
     setcookie("ls-login_stamp", $stamp, time()+60*60*24);
-    header("Location: postlogin.php");
+    header("Location: postlogin.php?location=".urlencode("index.php"));

@@ -1,0 +1,23 @@
+<form action="{{block.script}}" method="{{block.method}}">
+    <table>
+        {% for input in block.inputs %}
+        <tr>
+            <td>{{input.label}}</td>
+            <td>
+                {% if input.type == 'textarea' %}
+                    <textarea name="{{input.name}}" {% if input.args %} {{input.args}} {% endif %}></textarea>
+                {% elseif input.type == 'list'%}
+                    <select name="{{input.name}}" size=1>
+                        {% for option in input.options %}
+                            <option value="{{option.value}}">{{option.label}}</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input type="{{input.type}}" name="{{input.name}}" {% if input.args %} {{input.args | raw}} {% endif %} />
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <input type="submit" value="{{block.submit_button_text}}" />
+</form>
