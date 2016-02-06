@@ -81,6 +81,7 @@
                         'submit_button_text' => "Register");
         $page = array(  'title' => "Register by invite",
                         'page_title' => "Register",
+                        'user' => $user,
                         'blocks' => array( 'register' => $form));
 
         echo $twig->render("template.html", $page);

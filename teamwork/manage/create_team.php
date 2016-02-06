@@ -6,6 +6,7 @@
 
     $page = array(  'title' => "Team creation",
                     'page_title' => "Complete this form create new team:",
+                    'user' => $user,
                     'blocks' => array(  'comment' => array( 'type' => "text_html",
                                                             'content' => "<p class='comment'>You can invite people to your team from team management panel after creation of one.</p>"),
                                         'form' => array(    'type' => "form",
@@ -63,5 +64,11 @@
 
     $db_query = $db->prepare("INSERT INTO `teams` (`team_id`, `team_name`, `shown_team_name`, `team_description`, `team_owner`, `team_managers`, `team_members`)
                                             VALUES (NULL, :team_name, :shown_team_name, :team_description, :team_owner, :team_managers, :team_members);");
-    $db_query->execute((array)$data);
+    $db_query->bindParam(':team_name', $data['team_name']);
+    $db_query->bindParam(':shown_team_name', $data['shown_team_name']);
+    $db_query->bindParam(':team_description', $data['team_description']);
+    $db_query->bindParam(':team_owner', $data['team_owner']);
+    $db_query->bindParam(':team_managers', $data['team_description'], PDO::PARAM_LOB);
+    $db_query->bindParam(':team_members', $data['team_members'], PDO::PARAM_LOB);
+    $db_query->execute();
     header("Location: edit_team.php");

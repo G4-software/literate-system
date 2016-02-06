@@ -1,0 +1,11 @@
+<table class="{{block.class}}">
+    {% for row in block.rows %}
+        <tr>
+            {% for col in row %}
+                <td>
+                    {{col|raw}}
+                </td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+</table>

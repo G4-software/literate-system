@@ -50,6 +50,7 @@
                     'update_form' => $form);
     $page = array(  'title' => "Update profile",
                     'page_title' => "Update profile",
+                    'user' => $user,
                     'blocks' => $blocks);
 
     if(empty($_POST))

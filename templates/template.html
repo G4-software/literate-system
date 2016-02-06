@@ -10,17 +10,32 @@
             <h1>{{page_title}}</h1>
             {% for block in blocks %}
                 <div class="{{block.type}}">
+                    {% if block.type == 'h2' %}
+                        <h2>{{block.content}}</h2>
+                    {% endif %}
+
+                    {% if block.type == 'h3' %}
+                        <h3>{{block.content}}</h3>
+                    {% endif %}
 
                     {% if block.type == 'form' %}
                         {% include 'form.html' %}
                     {% endif %}
 
                     {% if block.type == 'text_html' %}
-                        {% include 'text_html.html' %}
+                        {{block.content | raw}}
                     {% endif %}
 
                     {% if block.type == 'text' %}
-                        {% include 'text.html' %}
+                        <p class='{{block.class}}'>{{block.content}}</p>
+                    {% endif %}
+
+                    {% if block.type == 'table_esc' %}
+                        {% include 'table_esc.html' %}
+                    {% endif %}
+
+                    {% if block.type == 'table' %}
+                        {% include 'table.html' %}
                     {% endif %}
                 </div>
             {% endfor %}

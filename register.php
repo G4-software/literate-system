@@ -6,6 +6,7 @@
 
 	$page = array(	'title' => "Register",
 					'page_title' => "Register",
+					'user' => $user,
 					'blocks' => array(  'register' => array(   	'type' => 'form',
 																'script' => "register.php",
 																'method' => "POST",

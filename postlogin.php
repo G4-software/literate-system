@@ -22,6 +22,10 @@
             define("USER_ID", $result['user_id']);
             define("USERNAME", $username);
             define("SHOWN_USERNAME", $shown_username);
+
+            $user['logged_in'] = 1;
+            $user['name'] = SHOWN_USERNAME;
+
             if(isset($_GET['location']))
             {
                 header("Location: ".urldecode($_GET['location']));

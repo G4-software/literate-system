@@ -15,8 +15,6 @@
     $db_query->execute();
     $result = $db_query->fetchAll(PDO::FETCH_ASSOC);
 
-    // print_r($result);
-
     foreach($result as $option)
     {
         $temp = array(  'value' => $option['team_id'],
@@ -47,6 +45,7 @@
     $blocks = array('invite_form' => $form);
     $page = array(  'title' => "Invite",
                     'page_title' => "Complete this form to send invitation:",
+                    'user' => $user,
                     'blocks' => $blocks);
 
     if(empty($_POST))
