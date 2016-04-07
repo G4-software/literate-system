@@ -1,8 +1,22 @@
 <div class='menu'>
     <ul>
-        <li class='item'><a href="index.php">Main page</a></li>
-        {% for item in menu %}
-            <li class='item'><a href='{{item.link}}'>{{item.text}}</a></li>
+        <li class='main_page'><a class='item' href="{{site.root}}/index.php">Главная</a></li>
+        {% for team in menu.teams %}
+        <ul>
+            <li class="team"><a class='item' href='#'>{{team.team_name}}</a>
+                <ul>
+                    <li class="menu_subheader">Заявки:</li>
+                    <li class="menu_subitem"><a href='{{site.root}}/teamwork/issues/open_issue.php?team_id={{team.team_id}}'>Открыть заявку</a></li>
+                    <li class="menu_subitem"><a href='{{site.root}}/teamwork/issues/view_issue.php?in_team={{team.team_id}}'>Просмотр и управление</a></li>
+                </ul>
+                <ul>
+                    <li class="menu_subheader">Команда:</li>
+                    <li class="menu_subitem"><a href='{{site.root}}/teamwork/manage/edit_team.php?team_id={{team.team_id}}'>Управление</a></li>
+                    <li class="menu_subitem"><a href='{{site.root}}/teamwork/invite/invite.php?team_id={{team.team_id}}'>Приглашения</a></li>
+                </ul>
+            </li>
+        </ul>
         {% endfor %}
+        <li class='new_team'><a class='item' href="{{site.root}}/teamwork/manage/create_team.php">+ Новая команда</a></li>
     </ul>
 </div>

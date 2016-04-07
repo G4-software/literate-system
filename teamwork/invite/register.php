@@ -1,8 +1,8 @@
 <?php
-    require_once __DIR__."/../../config.php";
-    require_once __DIR__."/../../database/db_connection.php";
-    require_once __DIR__."/../../postlogin.php";
-    require_once __DIR__."/../../twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
 //Redirect to homepage if no GET query present
     if((empty($_POST) && isset($_GET['team']) && isset($_GET['stamp'])) || (empty($_GET) && !empty($_POST['team']) && !empty($_POST['stamp']) && count(array_filter($_POST))<7))
@@ -25,7 +25,7 @@
     	$result = $db_query->fetch(PDO::FETCH_ASSOC);
         if(($result['team'] != $team) || ($result['is_used'] == 1) || ($result['expire_on'] <= time()))
         {
-            header("Location: ../../index.php");
+            header("Location: {$site['root']}/index.php");
         }
 
         $db_query = $db->prepare("SELECT `shown_team_name` FROM `teams` WHERE `team_id` = :team_id;");
@@ -43,26 +43,26 @@
         $db_query->execute();
         $invited_by_name = $db_query->fetchColumn();
 
-        $inputs = array(    'username' => array(	'label' => "Username:",
+        $inputs = array(    'username' => array(	'label' => "Имя пользователя:",
                                                     'type' => "text",
                                                     'name' => "username"),
-                            'password' => array(	'label' => "Password:",
+                            'password' => array(	'label' => "Пароль:",
                                                     'type' => "password",
                                                     'name' => "password"),
-                            'password_confirmation' => array(	'label' => "Enter again:",
+                            'password_confirmation' => array(	'label' => "Повторите ввод:",
                                                                 'type' => "password",
                                                                 'name' => "password_confirmation"),
-                            'name' => array(	'label' => "Your name:",
+                            'name' => array(	'label' => "Ваше имя:",
                                                 'type' => "text",
                                                 'name' => "name"),
-                            'email' => array(   'label' => "Your email:",
+                            'email' => array(   'label' => "Ваш email:",
                                                 'type' => "email",
                                                 'name' => "email"),
-                            'invited_by_name' => array( 'label' => "You are invited by",
+                            'invited_by_name' => array( 'label' => "Вы были приглашены пользователем",
                                                         'type' => "text",
                                                         'name' => "invited_by_name",
                                                         'args' => "readonly value=$invited_by_name"),
-                            'team_name' => array(   'label' => "to team",
+                            'team_name' => array(   'label' => "в команду",
                                                     'type' => "text",
                                                     'name' => "team_name",
                                                     'args' => "readonly value=$team_name"),
@@ -78,10 +78,10 @@
                         'script' => "register.php",
                         'method' => "POST",
                         'inputs' => $inputs,
-                        'submit_button_text' => "Register");
-        $page = array(  'title' => "Register by invite",
-                        'page_title' => "Register",
-                        'user' => $user,
+                        'submit_button_text' => "Зарегистрироваться");
+        $page = array(  'title' => "Регистрация по приглашению",
+                        'page_title' => "Зарегистрироваться",
+                        'site' => $site,
                         'blocks' => array( 'register' => $form));
 
         echo $twig->render("template.html", $page);
@@ -89,7 +89,7 @@
     }
     else
     {
-        header("Location: ../../../index.php");
+        header("Location: {$site['root']}/index.php");
     }
 
 //Get data from POST query
@@ -109,7 +109,7 @@
     $result = $db_query->fetch(PDO::FETCH_ASSOC);
     if(($result['team_id'] != $team_id) || ($result['is_used'] == 1) || ($result['expire_on'] <= time()))
     {
-        header("Location: ../../index.php");
+        header("Location: {$site['root']}/index.php");
     }
     $data['invited_by'] = $result['invited_by'];
 
@@ -117,20 +117,36 @@
 	$pass_hash_alt = md5($_POST['password_confirmation']);
 	if($data['pass_hash'] != $pass_hash_alt)
 	{
-		//Error
+        $error = array( 'type' => "error",
+						'summary' => "Пароли не совпали",
+						'content' => "Повторите ввод, обратив внимание на пароли");
+		$page['blocks'] = array('error' => $error,
+								'register' => $form);
+		echo $twig->render("template.html", $page);
+		die();
 	}
 	if(strlen($data['password'])<8)
 	{
-		//Error
-		die("Password is too short (<8 symbols)");
+        $error = array( 'type' => "error",
+						'summary' => "Пароль слишком короткий",
+						'content' => "Для вашей же безопасности минимальная длина пароля - 8 символов");
+		$page['blocks'] = array('error' => $error,
+								'register' => $form);
+		echo $twig->render("template.html", $page);
+		die();
 	}
 
 //Test if the email is valid
 	$email_regex = '/^[^0-9][_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,3})$/';
 	if (!preg_match($email_regex, $data['email']))
 	{
-		//Error
-		die("Email's not valid");
+        $error = array( 'type' => "error",
+						'summary' => "Неправильный email",
+						'content' => "Адрес, который вы ввели, недействителен");
+		$page['blocks'] = array('error' => $error,
+								'register' => $form);
+		echo $twig->render("template.html", $page);
+		die();
 	}
 
 //Test if user already is in DB
@@ -140,8 +156,12 @@
 	$result = $db_query->fetchColumn();
 	if($result == $data['username'])
 	{
-		//Error
-		die("The user '{$data['username']}' is alredy registered.");
+        $error = array( 'type' => "error",
+						'summary' => "Пользователь уже зарегистрирован",
+						'content' => "Пользователь {$data['username']} уже существует. Пожалуйста, войдите в аккаунт или придумайте другое имя пользователя");
+		$page['blocks'] = array('error' => $error,
+								'register' => $form);
+		echo $twig->render("template.html", $page);
 	}
 
 //Register user
@@ -170,4 +190,4 @@
     $db_query->bindParam('team_id', $team_id);
     $db_query->execute();
 
-	header("Location: ../../login.php");
+	header("Location: {$site['root']}/login.php");

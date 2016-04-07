@@ -1,62 +1,99 @@
 <?php
-    require_once __DIR__."/../../config.php";
-    require_once __DIR__."/../../database/db_connection.php";
-    require_once __DIR__."/../../postlogin.php";
-    require_once __DIR__."/../../twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
     if(!USER_LOGGED_IN)
     {
-        header("LocationL ../../../index.php");
+        header("LocationL {$site['root']}/login.php");
     }
 
-    $db_query = $db->prepare("SELECT `team_id`, `team_name` FROM `teams` WHERE `team_owner` = :user_id");
-    $user_id = USER_ID;
-    $db_query->bindParam(':user_id', $user_id);
+    $db_query = $db->prepare("SELECT `team_id`, `team_name`, `team_members` FROM `teams`");
     $db_query->execute();
-    $result = $db_query->fetchAll(PDO::FETCH_ASSOC);
+    $teams_raw = $db_query->fetchAll(PDO::FETCH_ASSOC);
+    $user_id = USER_ID;
+    $teams;
 
-    foreach($result as $option)
+    $team_selection;
+    if(!isset($_GET['team_id']))
     {
-        $temp = array(  'value' => $option['team_id'],
-                        'label' => $option['team_name']);
-        $teams[] = $temp;
+        foreach ($teams_raw as $team)
+        {
+            $team_members = unserialize($team['team_members']);
+            if(in_array($user_id, $team_members))
+            {
+                $temp = array(  'value' => $team['team_id'],
+                                'label' => $team['team_name']);
+                $teams[] = $temp;
+            }
+        }
+        $team_selection = array('label' => "Команда:",
+                                'type' => "list",
+                                'name' => "in_team",
+                                'options' => $teams);
+        $get_flag = false;
+    }
+    else
+    {
+        foreach ($teams_raw as $team)
+        {
+            $team_members = unserialize($team['team_members']);
+            if(in_array($user_id, $team_members) && $_GET['team_id']==$team['team_id'])
+            {
+                $temp = array(  'value' => $team['team_id'],
+                                'label' => $team['team_name']);
+                $teams[] = $temp;
+            }
+        }
+        $team_selection = array('label' => "Команда:",
+                                'type' => "list",
+                                'name' => "in_team",
+                                'options' => $teams,
+                                'args' => "readonly");
+        $get_flag = true;
     }
 
-    $inputs = array(    'issue_summary' => array(   'label' => "Summary:",
+    $inputs = array(    'issue_summary' => array(   'label' => "Заголовок:",
                                                     'type' => "text",
                                                     'name' => "issue_summary"),
-                        'issue_description' => array(   'label' => "Description:",
+                        'issue_description' => array(   'label' => "Описание:",
                                                         'type' => "textarea",
                                                         'name' => "issue_description",
                                                         'args' => "rows=4"),
-                        'in_team' => array( 'label' => "Team:",
-                                            'type' => "list",
-                                            'name' => "in_team",
-                                            'options' => $teams));
+                        'in_team' => $team_selection);
 
     $form = array(  'type' => "form",
                     'script' => "open_issue.php",
                     'method' => "POST",
                     'inputs' => $inputs,
-                    'submit_button_text' => "Open issue");
-    $blocks = array('text' => array(    'type' => 'text_html',
-                                        'content' => "<p class='text'>Fill following form to create issue:</p>"),
+                    'submit_button_text' => "Создать заявку");
+    $blocks = array('text' => array(    'type' => 'text',
+                                        'content' => "Заполните, чтобы создать заявку:"),
                     'open_form' => $form);
-    $page = array(  'title' => "Open_issue",
-                    'page_title' => "Open issue",
+    $page = array(  'title' => "Создать заявку",
+                    'page_title' => "Создать заявку",
+                    'menu' => array('teams' => $menu_teams),
+                    'site' => $site,
                     'user' => $user,
                     'blocks' => $blocks);
 
-    if(empty($_POST))
+    if($get_flag)
     {
-        echo $twig->render("template.html", $page);
-        die();
-    }
+        if(empty($_POST))
+        {
+            echo $twig->render("template.html", $page);
+            die();
+        }
 
-    if(count($_POST)<3)
-    {
-        echo $twig->render("template.html", $page);
-        die("Wrong input");
+        if(count($_POST)<3)
+        {
+            $page['blocks']['error'] = array(   'type' => "error",
+                                                'summary' => "Данные не отправлены",
+                                                'content' => "Сервер ничего не получил и обиделся.");
+            echo $twig->render("template.html", $page);
+            die();
+        }
     }
 
     $data['issue_summary'] = $_POST['issue_summary'];
@@ -71,8 +108,7 @@
     $data['opened_by'] = USER_ID;
     if(!in_array($data['opened_by'], $team_members))
     {
-        echo $twig->render("template.html", $page);
-        die("Not member of the team");
+        header("Location: {$site['root']}/open_issue.php");
     }
 
     $db_query = $db->prepare("SELECT `issue_in_project_id` FROM `issues` WHERE `in_team` = :in_team ORDER BY `issues`.`issue_in_project_id` DESC;");
@@ -88,7 +124,7 @@
 
     $text = array(  'type' => "text_html");
     $blocks = array( 'text' => $text);
-    $page['title'] = "Success";
-    $page['page_title'] = "Issue opened";
+    $page['title'] = "Успех";
+    $page['page_title'] = "Заявка создана";
     $page['blocks'] = $blocks;
     echo $twig->render("template.html", $page);

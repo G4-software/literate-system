@@ -1,6 +1,6 @@
 <?php
-    require_once __DIR__."/config.php";
-    require_once __DIR__."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
 
     if(isset($_COOKIE['ls-username']) && isset($_COOKIE['ls-shown_username']) && isset($_COOKIE['ls-login_stamp']))
     {
@@ -26,9 +26,25 @@
             $user['logged_in'] = 1;
             $user['name'] = SHOWN_USERNAME;
 
+            $db_query = $db->prepare("SELECT `team_id`, `team_name`, `team_members` FROM `teams`");
+            $db_query->execute();
+            $teams_raw = $db_query->fetchAll(PDO::FETCH_ASSOC);
+            $user_id = USER_ID;
+            $menu_teams;
+            foreach ($teams_raw as $team)
+            {
+                $team_members = unserialize($team['team_members']);
+                if(in_array($user_id, $team_members))
+                {
+                    $temp = array(  'team_id' => $team['team_id'],
+                                    'team_name' => $team['team_name']);
+                    $menu_teams[] = $temp;
+                }
+            }
+
             if(isset($_GET['location']))
             {
-                header("Location: ".urldecode($_GET['location']));
+                header("Location: {$site['root']}/".urldecode($_GET['location']));
             }
         }
     }

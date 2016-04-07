@@ -2,12 +2,12 @@
     <table>
         {% for input in block.inputs %}
         <tr>
-            <td>{{input.label}}</td>
-            <td>
+            <td class="label">{{input.label}}</td>
+            <td class="input">
                 {% if input.type == 'textarea' %}
                     <textarea name="{{input.name}}" {% if input.args %} {{input.args}} {% endif %}></textarea>
                 {% elseif input.type == 'list'%}
-                    <select name="{{input.name}}" size=1>
+                    <select name="{{input.name}}" {% if input.args %} {{input.args}} {% endif %} size=1>
                         {% for option in input.options %}
                             <option value="{{option.value}}">{{option.label}}</option>
                         {% endfor %}
@@ -19,5 +19,5 @@
         </tr>
         {% endfor %}
     </table>
-    <input type="submit" value="{{block.submit_button_text}}" />
+    <input type="submit" class="button" value="{{block.submit_button_text}}" />
 </form>

@@ -1,27 +1,18 @@
 <header>
-    <a href="index.php">
-        <div class='headline'>
-            <span class='logo'><img src='/data/logo.png' /></span>
+    <div class='headline'>
+        <a href="{{site.root}}/index.php">
+            <span class='logo'><img src='{{site.root}}/data/logo.png' /></span>
             <span class='title'>Literate-System</span>
-        </div>
-    </a>
+        </a>
+    </div>
     <div class='user_block'>
         <ul>
             {% if user.logged_in == 1 %}
-                <li class='username'>{{user.name}}</li>
-                <li class='user_functions'>
-                    <ul>
-                        <li class='profile_link'><a href='profile.php?'{{user.name}}>Profile</a></li>
-                        <li class='log_out'><a href="logout.php">Log out</a></li>
-                    </ul>
-                </li>
+                <li class='profile_link'><a href='{{site.root}}/profile.php?'{{user.name}}>{{user.name}}</a></li>
+                <li class='log_out'><a href="{{site.root}}/logout.php">Выйти</a></li>
             {% else %}
-                <li class='user_functions'>
-                    <ul>
-                        <li class='sign_up'><a href='register.php'>Sign up</a></li>
-                        <li class='log_in'><a href="login.php">Log in</a></li>
-                    </ul>
-                </li>
+                <li class='sign_up'><a href='{{site.root}}/register.php'>Зарегистрироваться</a></li>
+                <li class='log_in'><a href="{{site.root}}/login.php">Войти</a></li>
             {% endif %}
         </ul>
     </div>

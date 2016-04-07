@@ -1,0 +1,40 @@
+<div class="info">
+    <h2 class="summary">{{block.summary}}</h2>
+    <table>
+        <tr>
+            <td><a href="{{site.root}}/profile.php?user_id={{block.opened_by_id}}">{{block.opened_by}}</a></td>
+            <td>{{block.opened_on}}</td>
+        </tr>
+    </table>
+    <div class="description">
+        <p>{{block.description|raw}}</p>
+    </div>
+</div>
+<div class="close">
+    {% if block.is_closed==0 %}
+    <form action="{{site.root}}/teamwork/issues/close_issue.php" method="GET">
+        <input type="text" name="issue_in_project_id" hidden readonly value="{{block.issue_in_project_id}}" />
+        <input type="text" name="team_id" hidden readonly value="{{block.team_id}}" />
+        <input type="submit" value="Закрыть заявку" />
+    </form>
+    {% else %}
+    <h3>Закрыта</h3>
+    <p>{{block.closed_by}} закрыл заявку {{block.closed_on}} со следующим сообщением:</p>
+    {% endif %}
+</div>
+<div class="comments">
+    <h3>Комментарии</h3>
+    <table class="comments">
+        {% for comment in block.comments %}
+            <tr>
+                <td class="info"><h4>{{comment.author}}</h4><br /><span>{{comment.date}}</span></td>
+                <td class="content">{{comment.text}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <form action="{{site.root}}/teamwork/issues/leave_comment.php" method="POST">
+        <p>Оставить комментарий:</p>
+        <input type="textarea" name="comment" />
+        <input type="submit" value="Отправить" />
+    </form>
+</div>

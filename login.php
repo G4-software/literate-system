@@ -1,25 +1,26 @@
 <?php
-    require_once __DIR__."/config.php";
-    require_once __DIR__."/database/db_connection.php";
-    require_once __DIR__."/postlogin.php";
-    require_once __DIR__."/twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
-    $page = array(  'title' => "Login",
-                    'page_title' => "Login",
+    $page = array(  'title' => "Авторизация",
+                    'page_title' => "Авторизация",
+                    'site' => $site,
                     'blocks' => array(  'login' => array(   'type' => 'form',
                                                             'script' => "login.php",
                                         					'method' => "POST",
-                                        					'inputs' => array(	'username' => array(	'label' => "Username:",
+                                        					'inputs' => array(	'username' => array(	'label' => "Имя пользователя:",
                                         																'type' => "text",
                                         																'name' => "username"),
-                                        										'password' => array(	'label' => "Password:",
+                                        										'password' => array(	'label' => "Пароль:",
                                         																'type' => "password",
                                         																'name' => "password"),),
-                                                            'submit_button_text' => "Login")));
+                                                            'submit_button_text' => "Войти!")));
 
     if(USER_LOGGED_IN)
     {
-        header("Location: index.php");
+        header("Location: {$site['root']}/index.php");
     }
     elseif(empty($_POST))	//Escape if no data sent
     {

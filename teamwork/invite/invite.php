@@ -1,25 +1,31 @@
 <?php
-    require_once __DIR__."/../../config.php";
-    require_once __DIR__."/../../database/db_connection.php";
-    require_once __DIR__."/../../postlogin.php";
-    require_once __DIR__."/../../twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
     if(!USER_LOGGED_IN)
     {
-        header("Location: ./../../login.php");
+        header("Location: {$site['root']}/login.php");
     }
 
-    $db_query = $db->prepare("SELECT `team_id`, `team_name` FROM `teams` WHERE `team_owner` = :user_id");
-    $user_id = USER_ID;
-    $db_query->bindParam(':user_id', $user_id);
+    $db_query = $db->prepare("SELECT `team_id`, `team_name`, `team_managers` FROM `teams`");
     $db_query->execute();
-    $result = $db_query->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach($result as $option)
+    $teams_raw = $db_query->fetchAll(PDO::FETCH_ASSOC);
+    $user_id = USER_ID;
+    $teams;
+    foreach ($teams_raw as $team)
     {
-        $temp = array(  'value' => $option['team_id'],
-                        'label' => $option['team_name']);
-        $teams[] = $temp;
+        $team_managers = unserialize($team['team_managers']);
+        if(isset($team_managers))
+        {
+            if(in_array($user_id, $team_managers))
+            {
+                $temp = array(  'value' => $team['team_id'],
+                                'label' => $team['team_name']);
+                $teams[] = $temp;
+            }
+        }
     }
 
     for($var = 5; $var <= 60; $var+=5)
@@ -29,24 +35,39 @@
         $expire_periods[] = $temp;
     }
 
-    $inputs = array(    'team' => array(    'label' => "Select team:",
-                                            'type' => "list",
-                                            'name' => "team",
-                                            'options' => $teams),
-                        'expire' => array(	'label' => "Expires:",
-                                            'type' => "list",
-                                            'name' => "expire_period",
-                                            'options' => $expire_periods));
-    $form = array(  'type' => "form",
-                    'script' => "invite.php",
-                    'method' => "POST",
-                    'inputs' => $inputs,
-                    'submit_button_text' => "Get link!");
-    $blocks = array('invite_form' => $form);
-    $page = array(  'title' => "Invite",
-                    'page_title' => "Complete this form to send invitation:",
-                    'user' => $user,
-                    'blocks' => $blocks);
+    if(isset($teams))
+    {
+        $inputs = array(    'team' => array(    'label' => "Выберите команду:",
+                                                'type' => "list",
+                                                'name' => "team",
+                                                'options' => $teams),
+                            'expire' => array(	'label' => "Истекает:",
+                                                'type' => "list",
+                                                'name' => "expire_period",
+                                                'options' => $expire_periods));
+        $form = array(  'type' => "form",
+                        'script' => "invite.php",
+                        'method' => "POST",
+                        'inputs' => $inputs,
+                        'submit_button_text' => "Получить ссылку!");
+        $blocks = array('invite_form' => $form);
+        $page = array(  'title' => "Приглашения",
+                        'page_title' => "Укажите, чтобы создать приглашение:",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
+                        'user' => $user,
+                        'blocks' => $blocks);
+    }
+    else
+    {
+        $page = array(  'title' => "Приглашения",
+                        'page_title' => "Что-то не так",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
+                        'user' => $user,
+                        'blocks' => array(  'text' => array('type' => "text",
+                                                            'content' => "Видимо, пока вы не являетесь управляющим ни одной из групп и не можете создавать приглашения. :(")));
+    }
 
     if(empty($_POST))
     {
@@ -54,10 +75,13 @@
         die();
     }
 
-    if(count($_POST)<3)
+    if(count($_POST)<2)
     {
+        array_unshift($page['blocks'], array(   'type' => "error",
+                                                'summary' => "Повторите ввод",
+                                                'content' => "Почему-то форма передала не все аргументы, если эта ошибка повторится, свяжитесь с нами"));
         echo $twig->render("template.html", $page);
-        die("Wrong input");
+        die();
     }
 
     $data['expire_period'] = $_POST['expire_period'];
@@ -74,12 +98,12 @@
     $db_query->bindParam(':stamp', $stamp);
     $db_query->execute();
 
-    $link = "https://{$_SERVER['HTTP_HOST']}/teamwork/invite/register.php?team={$data['team_id']}&stamp=$stamp";
+    $link = "{$site['root']}/teamwork/invite/register.php?team={$data['team_id']}&stamp=$stamp";
 
     $text = array(  'type' => "text_html",
-                    'content' => "<p class='text'>This is register link for your invitation: <a class='link' href='$link'>$link</a></p>");
+                    'content' => "<p class='text'>Это ссылка для регистрации по вашему приглашению: <a class='link' href='$link'>$link</a></p>");
     $blocks = array( 'text' => $text);
-    $page['title'] = "Success";
-    $page['page_title'] = "Invitation created";
+    $page['title'] = "Успех";
+    $page['page_title'] = "Приглашение создано";
     $page['blocks'] = $blocks;
     echo $twig->render("template.html", $page);

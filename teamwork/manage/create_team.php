@@ -1,29 +1,32 @@
 <?php
-    require_once __DIR__."/../../config.php";
-    require_once __DIR__."/../../database/db_connection.php";
-    require_once __DIR__."/../../postlogin.php";
-    require_once __DIR__."/../../twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
-    $page = array(  'title' => "Team creation",
-                    'page_title' => "Complete this form create new team:",
+    $page = array(  'title' => "Создать команду",
+                    'page_title' => "Заполните, чтобы создать команду:",
+                    'menu' => array('teams' => $menu_teams),
+                    'site' => $site,
                     'user' => $user,
                     'blocks' => array(  'comment' => array( 'type' => "text_html",
-                                                            'content' => "<p class='comment'>You can invite people to your team from team management panel after creation of one.</p>"),
+                                                            'content' => "<p class='comment'>Позже вы сможете пригласить участников в команду.</p>"),
                                         'form' => array(    'type' => "form",
                                                             'script' => "create_team.php",
                                         					'method' => "POST",
-                                        					'inputs' => array(	'team_name' => array(	'label' => "Select name for your team:",
+                                        					'inputs' => array(	'team_name' => array(	'label' => "Название команды:",
                                             															'type' => "text_html",
                                             															'name' => "team_name"),
-                                        										'expire' => array(	'label' => "Descript your team:",
+                                        										'expire' => array(	'label' => "Описание:",
                                         															'type' => "textarea",
                                         															'name' => "team_description",
                                                                                                     'args' => "rows=5")),
-                                                            'submit_button_text' => "Create team")));
+                                                            'submit_button_text' => "Создать команду")));
 
     if(!USER_LOGGED_IN)
     {
-        header("Location: ../../login.php");
+        header("Location: {$site['root']}/login.php");
+        die();
     }
     elseif(empty($_POST))
     {
@@ -31,9 +34,10 @@
         die();
     }
 
-    if(!isset($_POST['team_name']) || !isset($_POST['team_description']))
+    if(empty($_POST['team_name']) || empty($_POST['team_description']))
     {
         echo $twig->render("template.html", $page);
+        die();
     }
 
     $data['team_name'] = strtoupper(trim($_POST['team_name']));
@@ -54,7 +58,8 @@
     if($result == $team_name)
     {
         echo $twig->render("template.html", $page);
-        echo "The team $team_name already exists";
+        echo "Такая команда уже есть: $team_name ";
+        die();
     }
 
     $team_members[] = $data['team_owner'];
@@ -68,7 +73,7 @@
     $db_query->bindParam(':shown_team_name', $data['shown_team_name']);
     $db_query->bindParam(':team_description', $data['team_description']);
     $db_query->bindParam(':team_owner', $data['team_owner']);
-    $db_query->bindParam(':team_managers', $data['team_description'], PDO::PARAM_LOB);
+    $db_query->bindParam(':team_managers', $data['team_managers'], PDO::PARAM_LOB);
     $db_query->bindParam(':team_members', $data['team_members'], PDO::PARAM_LOB);
     $db_query->execute();
-    header("Location: edit_team.php");
+    header("Location: {$site['root']}/edit_team.php");

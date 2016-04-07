@@ -1,0 +1,43 @@
+<div class="short_info">
+    <h2 class="username">{{block.username}} {% if block.username == user.name %} <a class="edit_user" href="{{site.root}}/edit_user.php">Редактировать</a> {% endif %}</h2>
+    <p class="opened">Открыл {{block.issues_opened_num}} заявок</p>
+    <p class="closed">Закрыл {{block.issues_closed_num}} заявок</p>
+</div>
+<h3>Открыл заявки:</h3>
+<table>
+    <tr>
+        <th>Заявка</th>
+        <th>в команде</th>
+        <th>открыта</th>
+        <th>закрыта</th>
+        <th>пользователем</th>
+    </tr>
+    {% for issue in block.issues_opened %}
+    <tr>
+        <td><a href="{{site.root}}/teamwork/issues/view_issue.php?in_team={{issue.team_id}}&issue_in_project_id={{issue.issue_in_project_id}}">{{issue.issue_summary}}</a></td>
+        <td>{{issue.in_team}}</td>
+        <td>{{issue.opened_on}}</td>
+        <td>{% if issue.is_closed == 0 %}не {% endif %}закрыта {{issue.closed_on}}</td>
+        <td>{% if issue.is_closed == 0 %}-{% else %}<a href="{{site.root}}/profile.php?username={{issue.closed_by}}">{{issue.closed_by}}</a>{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+<h3>Закрыл заявки:</h3>
+<table>
+    <tr>
+        <th>Заявка</th>
+        <th>в команде</th>
+        <th>открыта</th>
+        <th>пользователем</th>
+        <th>закрыта</th>
+    </tr>
+    {% for issue in block.issues_closed %}
+    <tr>
+        <td><a href="{{site.root}}/teamwork/issues/view_issue.php?in_team={{issue.team_id}}&issue_in_project_id={{issue.issue_in_project_id}}">{{issue.issue_summary}}</a></td>
+        <td>{{issue.in_team}}</td>
+        <td>{{issue.opened_on}}</td>
+        <td><a href="{{site.root}}/profile.php?username={{issue.opened_by}}">{{issue.opened_by}}</a></td>
+        <td>{{issue.closed_on}}</td>
+    </tr>
+    {% endfor %}
+</table>

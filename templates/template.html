@@ -2,43 +2,58 @@
 <html>
     <head>
         <title>{{title}} | Literate-System</title>
+        <link rel="stylesheet" href="{{site.root}}/css/template.css">
+        <link href='https://fonts.googleapis.com/css?family=Roboto:400,300&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Play&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:300,400&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
+        <meta charset="UTF-8">
     </head>
     <body>
         {% include 'header.html' %}
-        {# {% include 'menu.html' %} #}
-        <div class"content">
-            <h1>{{page_title}}</h1>
-            {% for block in blocks %}
-                <div class="{{block.type}}">
-                    {% if block.type == 'h2' %}
-                        <h2>{{block.content}}</h2>
-                    {% endif %}
+        <div class="main">
+            {% include 'menu.html' %}
+            <div class="content">
+                <h1>{{page_title}}</h1>
+                {% for block in blocks %}
+                    <div class="{{block.type}}">
+                        {% if block.type == 'h2' %}
+                            <h2>{{block.content}}</h2>
+                        {% endif %}
 
-                    {% if block.type == 'h3' %}
-                        <h3>{{block.content}}</h3>
-                    {% endif %}
+                        {% if block.type == 'h3' %}
+                            <h3>{{block.content}}</h3>
+                        {% endif %}
 
-                    {% if block.type == 'form' %}
-                        {% include 'form.html' %}
-                    {% endif %}
+                        {% if block.type == 'form' %}
+                            {% include 'form.html' %}
+                        {% endif %}
 
-                    {% if block.type == 'text_html' %}
-                        {{block.content | raw}}
-                    {% endif %}
+                        {% if block.type == 'text_html' %}
+                            {{block.content | raw}}
+                        {% endif %}
 
-                    {% if block.type == 'text' %}
-                        <p class='{{block.class}}'>{{block.content}}</p>
-                    {% endif %}
+                        {% if block.type == 'text' %}
+                            <p class='{{block.class}}'>{{block.content}}</p>
+                        {% endif %}
 
-                    {% if block.type == 'table_esc' %}
-                        {% include 'table_esc.html' %}
-                    {% endif %}
+                        {% if block.type == 'table_esc' %}
+                            {% include 'table_esc.html' %}
+                        {% endif %}
 
-                    {% if block.type == 'table' %}
-                        {% include 'table.html' %}
-                    {% endif %}
-                </div>
-            {% endfor %}
+                        {% if block.type == 'table' %}
+                            {% include 'table.html' %}
+                        {% endif %}
+
+                        {% if block.type == 'profile' %}
+                            {% include 'profile.html' %}
+                        {% endif %}
+
+                        {% if block.type == 'error' %}
+                            {% include 'error.html' %}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
         </div>
         {% include 'footer.html' %}
     </body>

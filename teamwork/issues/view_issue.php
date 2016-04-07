@@ -1,12 +1,12 @@
 <?php
-    require_once __DIR__."/../../config.php";
-    require_once __DIR__."/../../database/db_connection.php";
-    require_once __DIR__."/../../postlogin.php";
-    require_once __DIR__."/../../twig_config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/config.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/database/db_connection.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/postlogin.php";
+    require_once $_SERVER['DOCUMENT_ROOT']."/twig_config.php";
 
     if(!USER_LOGGED_IN)
     {
-        header("Location: ../../../index.php");
+        header("Location: {$site['root']}/login.php");
     }
 
     if(empty($_GET))
@@ -27,7 +27,7 @@
             }
         }
 
-        $inputs = array('in_team' => array( 'label' => "Team:",
+        $inputs = array('in_team' => array( 'label' => "Команда:",
                                             'type' => "list",
                                             'name' => "in_team",
                                             'options' => $teams));
@@ -36,12 +36,14 @@
                         'script' => "view_issue.php",
                         'method' => "GET",
                         'inputs' => $inputs,
-                        'submit_button_text' => "Next >>");
+                        'submit_button_text' => "Далее >>");
         $blocks = array('text' => array(    'type' => 'text_html',
-                                            'content' => "<p class='text'>Issue not specified, so, please, select a team, first:</p>"),
+                                            'content' => "<p class='text'>Заявка не указана, но мы попробуем ее найти. Сначала выберите команду:</p>"),
                         'open_form' => $form);
-        $page = array(  'title' => "View issue",
-                        'page_title' => "View issue",
+        $page = array(  'title' => "Просмотр заявки",
+                        'page_title' => "Просмотр заявки",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
                         'user' => $user,
                         'blocks' => $blocks);
 
@@ -52,9 +54,11 @@
     if(isset($_GET['in_team']) && !isset($_GET['issue_in_project_id']))
     {
         $blocks = array('text' => array(    'type' => 'text_html',
-                                            'content' => "<p class='text'>Select issue:</p>"));
-        $page = array(  'title' => "View issue",
-                        'page_title' => "View issue",
+                                            'content' => "<p class='text'>Выберите заявку:</p>"));
+        $page = array(  'title' => "Просмотр заявки",
+                        'page_title' => "Просмотр заявки",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
                         'user' => $user,
                         'blocks' => $blocks);
 
@@ -66,8 +70,7 @@
         $user_id = USER_ID;
         if(!in_array($user_id, $team_members))
         {
-            echo $twig->render("template.html", $page);
-            die("Not member of the team");
+            header("Location: {$site['root']}/view_issue.php");
         }
 
         $db_query = $db->prepare("SELECT `issue_in_project_id`, `issue_summary`, `opened_by`, `opened_on` FROM `issues` WHERE `in_team` = :in_team AND `is_closed` = 0");
@@ -90,13 +93,22 @@
             $issues[] = $temp;
         }
 
-        $table = array( 'type' => 'table',
-                        'rows' => $issues);
-
-        $page = array(	'title' => "View issue",
-    					'page_title' => "View issue",
+        if(isset($issues))
+        {
+            $info = array(  'type' => 'table',
+                            'rows' => $issues);
+        }
+        else
+        {
+            $info = array(  'type' => "text",
+                            'content' => "Ура! Нет ни одной активной заявки!");
+        }
+        $page = array(	'title' => "Просмотр заявок",
+    					'page_title' => "Просмотр заявок",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
                         'user' => $user,
-    					'blocks' => array(  'table' => $table));
+    					'blocks' => array(  'issues' => $info));
         echo $twig->render("template.html", $page);
         die();
     }
@@ -104,9 +116,11 @@
     if(isset($_GET['in_team']) && isset($_GET['issue_in_project_id']))
     {
         $blocks = array('text' => array(    'type' => 'text_html',
-                                            'content' => "<p class='text'>Select issue:</p>"));
-        $page = array(  'title' => "View issue",
-                        'page_title' => "View issue",
+                                            'content' => "<p class='text'>Выберите заявку:</p>"));
+        $page = array(  'title' => "Просмотр заявок",
+                        'page_title' => "Просмотр заявок",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
                         'user' => $user,
                         'blocks' => $blocks);
 
@@ -118,8 +132,7 @@
         $user_id = USER_ID;
         if(!in_array($user_id, $team_members))
         {
-            echo $twig->render("template.html", $page);
-            die("Not member of the team");
+            header("Location: {$site['root']}/view_issue.php");
         }
 
         $db_query = $db->prepare("SELECT `issue_id`, `issue_summary`, `issue_description`, `opened_by`, `opened_on`, `is_closed`, `closed_by`, `closed_on`, `close_message`, `comments` FROM `issues` WHERE `in_team` = :in_team AND `issue_in_project_id` = :issue_in_project_id");
@@ -127,30 +140,37 @@
         $db_query->bindParam(':issue_in_project_id', $_GET['issue_in_project_id']);
         $db_query->execute();
         $issue = $db_query->fetch(PDO::FETCH_ASSOC);
+
+        $db_query = $db->prepare("SELECT `shown_username` FROM `users` WHERE `user_id` = :user_id");
+        $db_query->bindParam(':user_id', $issue['opened_by']);
+        $db_query->execute();
+        $opened_by_username = $db_query->fetchColumn();
+
         $blocks = array('issue_summary' => array(   'type' => "h2",
                                                     'content' => $issue['issue_summary']),
                         'opened_table' => array('type' => "table",
-                                                'rows' => array('1' =>  array(  'opened_by' => $issue['opened_by'],
+                                                'rows' => array('1' =>  array(  'opened_by' => $opened_by_username,
                                                                                 'opened_on' => date("H:i:s d.m.Y", $issue['opened_on'])))),
                         'issue_description' => array(   'type' => 'text_html',
                                                         'content' => $issue['issue_description']));
 
         if($issue['is_closed'] == 1)
         {
+            $db_query = $db->prepare("SELECT `shown_username` FROM `users` WHERE `user_id` = :user_id");
+            $db_query->bindParam(':user_id', $issue['closed_by']);
+            $db_query->execute();
+            $closed_by_username = $db_query->fetchColumn();
+
             $blocks['is_closed'] = array(   'type' => "h3",
-                                            'content' => "Closed");
+                                            'content' => "Закрыта");
             $blocks['closed_table'] = array('type' => "table",
-                                            'rows' => array('1' =>  array(  'closed_by' => $issue['closed_by'],
+                                            'rows' => array('1' =>  array(  'closed_by' => $closed_by_username,
                                                                             'closed_on' => date("H:i:s d.m.Y", $issue['closed_on']))));
             $blocks['close_message'] = array(   'type' => "text",
                                                 'content' => $issue['close_message']);
         }
         else
         {
-            $blocks['is_closed'] = array(   'type' => "h3",
-                                            'content' => "Not closed");
-            $blocks['close_text'] = array(  'type' => "text",
-                                            'content' => "You may close this issue:");
             $inputs = array('issue_id' => array('type' => "text",
                                                 'name' => "issue_in_project_id",
                                                 'args' => "hidden readonly value='{$_GET['issue_in_project_id']}'"),
@@ -161,19 +181,19 @@
                                     'script' => "close_issue.php",
                                     'method' => "GET",
                                     'inputs' => $inputs,
-                                    'submit_button_text' => "Close");
+                                    'submit_button_text' => "Закрыть");
             $blocks['close_form'] = $close_button;
         }
 
         $blocks['messages'] = array('type' => "h3",
-                                    'content' => "Messages");
+                                    'content' => "Комментарии");
 
         $messages = unserialize($issue['comments']);
         $messages_table = array('type' => 'table_esc',
                                 'rows' => $issue);
         $blocks['messages_table'] = $messages_table;
 
-        $inputs = array('send_message' => array('label' => "Leave comment:",
+        $inputs = array('send_message' => array('label' => "Отправить комментарий:",
                                                 'type' => "textarea",
                                                 'name' => "message_text",
                                                 'args' => "rows=3"));
@@ -183,12 +203,14 @@
                                 'inputs' => $inputs,
                                 'submit_button_text' => "Comment");
         $blocks['message_form'] = $message_form;
-        $page = array(  'title' => "View issue #{$_GET['issue_in_project_id']}",
-                        'page_title' => "Issue #{$_GET['issue_in_project_id']}",
+        $page = array(  'title' => "Просмотр заявки #{$_GET['issue_in_project_id']}",
+                        'page_title' => "Заявка #{$_GET['issue_in_project_id']}",
+                        'menu' => array('teams' => $menu_teams),
+                        'site' => $site,
                         'user' => $user,
                         'blocks' => $blocks);
         echo $twig->render("template.html", $page);
         die();
     }
 
-    header("Location: view_issue.php");
+    header("Location: {$site['root']}/view_issue.php");
